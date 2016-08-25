@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ExoAngular 4 - Carnet d'adresses</title>
+    <!-- Link pour pouvoir afficher les Material Icon-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- librairie Animate.css avec bower -->
+    <link rel="stylesheet" href="bower_components/animate.css/animate.min.css" media="screen" title="no title" charset="utf-8">
+    <!-- librairie Materialize CSS -->
+    <link rel="stylesheet" href="bower_components/materialize/dist/css/materialize.min.css" media="screen" title="no title" charset="utf-8">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.2/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style type="text/css" media="screen">
+      #tris {
+        background-color: #fff;
+        color: #546E7A;
+        display: block;
+      }
+      #ville {
+        background-color: #fff;
+        color: #546E7A;
+        display: block;
+      }
+      #langue {
+        background-color: #fff;
+        color: #546E7A;
+        display: block;
+      }
+    </style>
+  </head>
+  <!-- pour angular, tout le body est une application que se nomme carnetAdressesApp -->
+  <body ng-app="carnetAdressesApp">
+    <!-- Une application peut contenir 1 ou plusieurs controllers -->
+    <!-- un controller est une zone de controle pour Angular -->
+    <div class="container" ng-controller="MainCtrl">
+      <div class="col s12 m12">
+        <nav>
+          <div class="nav-wrapper">
+              <div class="input-field card blue-grey darken-1">
+                <input id="search" type="search" ng-model="search.nom">
+                <label for="search"><i class="material-icons">search</i></label>
+                <i class="material-icons">close</i>
+              </div>
+          </div>
+        </nav>
+      </div>
+      <h1>Carnet d'adresses</h1>
+      <div class="row">
+        <div class="col s12 m4">
+          <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+              <span class="card-title"><b>Infos</b></span>
+              <!-- Afficher à coté du nombre utilisateurs le mot "utilisateurs" avec un "s" ou pas avec la directive "ng-show" -->
+              <p ng-show="carnetAdresses.length > 1">
+                Nombre : {{ carnetAdresses.length }} utilisateurs
+              </p>
+              <p ng-show="carnetAdresses.length == 1">
+                Nombre : {{ carnetAdresses.length }} utilisateur
+              </p>
+              <!-- affiche la moyenne d'age et qui évolue à chaque suppression d'utilisateurs -->
+              <p ng-show="carnetAdresses.length >= 1">
+                Moyenne d'age : {{ moyenneAge() }} ans
+              </p>
+              <!-- Afficher "Il y a que des majeurs" si il y a uniquement que des majeurs "ng-show" ou "ng-if" (._every) -->
+              <p ng-show="utilisateursMajeur == true">
+                "Il n'y a que des majeurs"
+              </p>
+              <!-- Si il n'y a plus aucuns utilisateurs, afficher "Plus aucun utilisateurs" et cacher la moyenne d'age -->
+              <p ng-show="!carnetAdresses.length">
+                "Plus aucuns utilisateurs"
+              </p>
+            </div>
+            <div class="card-action">
+              <a href="#">This is a link</a>
+            </div>
+          </div>
+        </div>
+        <!-- Créer des boutons radios Lyon, Paris, Marseille pour filtrer les utilisateurs au click de ces bouttons radios -->
+        <div class="col s12 m4">
+          <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+              <span class="card-title"><b>Ville</b></span>
+              <p>
+                <input ng-model="ville" value="" class="with-gap" name="group1" type="radio" id="toutesVilles"  />
+                <label class="white-text" for="toutesVilles">Toutes</label>
+              </p>
+              <p>
+                <input ng-model="ville" value="Lyon" class="with-gap" name="group1" type="radio" id="lyon"  />
+                <label for="lyon">Lyon</label>
+              </p>
+              <p>
+                <input ng-model="ville" value="Paris" class="with-gap" name="group1" type="radio" id="paris"  />
+                <label for="paris">Paris</label>
+              </p>
+              <p>
+                <input ng-model="ville" value="Marseille" class="with-gap" name="group1" type="radio" id="marseille"  />
+                <label for="marseille">Marseille</label>
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- DatePicker -->
+        <div class="col s12 m4">
+          <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+              <span class="card-title"><b>Date Naissance</b></span>
+                <input type="date" class="datepicker" ng-model="date" />
+            </div>
+          </div>
+        </div>
+        <!-- Créer des checkbox de tranches d'age permettant de filtrer par age les utilisateurs incluant les tranches d'ages suivantes: -10, 10-18, 18-30 , 30-45 , + de 45 -->
+        <div class="col s12 m12">
+          <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+              <span class="card-title"><b>Tranche d'âges</b></span><br>
+              <p ng-repeat="tranche in tranches">
+                <input ng-model="tranche.checked" value="{{ tranche.data }}" type="checkbox" class="filled-in" id="{{ tranche.data }}" />
+                <label class="white-text" for="{{ tranche.data }}">{{ tranche.data }} ans</label>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col s12 m12">
+          <h6>Tri par note du Bac</h6>
+          <form action="#">
+            <p class="range-field">
+              <input type="range" id="test5" min="0" max="20" ng-model="notesBac" />
+              <label for="test5">Note au Bac</label>
+            </p>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <!-- Switch pour la majorité -->
+        <div class="col s6 m3">
+          <div class="switch">
+            <h6>Tri par majorité</h6>
+            <label>
+              Mineur
+              <input type="checkbox" ng-model="mineurMajeur">
+              <span class="lever"></span>
+              Majeur
+            </label>
+          </div>
+        </div>
+        <!-- pour trier par département -->
+        <div class="col s6 m3">
+          <h6>Tri par département</h6>
+          <input ng-model="departement.codepostal" placeholder="ex. 69" id="departement" maxlength="2" type="text" class="validate" />
+          <!-- <p ng-show="codepostal.length = 69000">
+            Département : {{ visuDepartement() }}
+          </p> -->
+        </div>
+        <!-- pour les lister les utilisateurs Favoris (liké) -->
+        <div class="col s6 m3">
+          <!-- Dropdown Trigger -->
+          <a class='dropdown-button btn' href='#' data-activates='dropdown1'>Favoris</a>
+          <!-- Dropdown Structure -->
+          <ul id='dropdown1' class='dropdown-content'>
+            <li><a href="#!">{{ save }}</a></li>
+          </ul>
+        </div>
+        <!-- Liste déroulante de tri nom, prénom, age, notebac, ville-->
+        <div class="col s6 m3">
+          <h6>Trier par :</h6>
+          <select ng-model="liste" id="tris">
+            <option value="nom">Nom</option>
+            <option value="prenom">Prénom</option>
+            <option value="age">Age</option>
+            <option value="ville">Ville</option>
+            <option value="noteBac">Note au Bac</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- fiche utilisateurs -->
+      <div class="row">
+        <div class="collection col s12 m4" ng-repeat="utilisateur in carnetAdresses | filter:ville | range:tranches | naissance:date | notes:notesBac | majorite:mineurMajeur | filter:search | filter:departement | orderBy:liste"> <!-- "filter:" permet de filtrer par une value -->
+          <a class="collection-item active">
+          <!-- bouton remove -->
+          <button ng-click="removeUtilisateur(utilisateur)" type="button" name="remove" class="btn-floating btn-small waves-effect waves-light red"><i class="material-icons">delete</i></button>
+          <!-- bouton like -->
+          <button ng-click="addLikeOrRemove(utilisateur)" class="btn-floating" type="button" name="button"><!-- Ajoute ou enlève l'ID de l'user au clique -->
+            <i ng-show="estDedans(utilisateur.id) == false" class="material-icons #f06292 pink lighten-2">favorite_border</i>
+            <i ng-show="estDedans(utilisateur.id) == true" class="material-icons #f06292 pink lighten-2">favorite</i>
+            <!-- dans le i, juste vérifier la présence de l'indice dans le tableau lesLikes -->
+          </button>
+          <!-- bouton +1 -->
+          <button ng-click="addone()"  type="button" name="+1" class="btn-floating btn-small waves-effect waves-light #2196f3 blue"><i class="material-icons">plus_one</i></button><p>
+          <!-- bouton search -->
+
+          <!-- -->
+          </p>#{{ utilisateur.id }} <b>{{ utilisateur.nom }}</b></a>
+          <a class="collection-item"><b>{{ utilisateur.prenom }}</b></a>
+          <a class="collection-item"><b>{{ utilisateur.age }} ans</b></a>
+          <a class="collection-item"><img ng-src="{{ utilisateur.photo }}" alt="" width="100" height="100" class="circle responsive-img"></a>
+          <a class="collection-item"><b>Date de naissance :</b>  {{ utilisateur.dateNaissance }}
+          <!-- ng-show sur le Material Icon pour faire affcher le "cake" si la function "anniversaire()" est vérifié --><i class="material-icons animated infinite swing" ng-show="anniversaire(utilisateur)">cake</i></a>
+          <a class="collection-item" ng-class="{'#ef5350 red lighten-1' : utilisateur.noteBac < 10}"><b>Note du Bac :</b> {{ utilisateur.noteBac }} / 20</a>
+          <a class="collection-item"><b>Sexe :</b> {{ sexe }}</a>
+          <a class="collection-item"><b>Ville :</b> {{ utilisateur.ville }}</a>
+          <a class="collection-item"><b>Bio :</b> {{ utilisateur.biographie }}</a>
+          <a class="collection-item"><b>Langue :</b> {{ utilisateur.langue }}  <img ng-src="{{ utilisateur.langue | drapeaux }}" class="circle responsive-img"></a>
+          <a class="collection-item"><b>Nombres de +1 :</b> {{ count }}</a>
+        </div>
+      </div>
+      <!-- <hr> -->
+      <h4>Ajout nouvel utilisateur</h4>
+      <hr>
+      <!-- début formulaire d'ajout d'utilisateurs -->
+      <div class="row">
+        <form class="col s12" ng-submit="add()">
+          <div class="row">
+            <div class="input-field col s6">
+              <input ng-model="nom" ng-trim="true" id="nom" type="text" class="validate">
+              <label for="nom">Nom</label>
+            </div>
+            <div class="input-field col s6">
+              <input ng-model="prenom" ng-trim="true" id="prenom" type="text" class="validate">
+              <label for="prenom">Prenom</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="input-field col s6">
+              <input placeholder="jj/mm/aaaa" ng-model="dateNaissance" ng-trim="true" id="dateNaissance" type="text" class="validate">
+              <label for="dateNaissance">Date de Naissance</label>
+            </div>
+            <div class="input-field col s6">
+              <input ng-model="age" ng-trim="true" id="age" type="text" class="validate">
+              <label for="age">Age</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="input-field col s12">
+              <i class="material-icons prefix">account_circle</i>
+              <input ng-model="photo" ng-trim="true" id="photo" type="text" class="validate">
+              <label for="photo">Photo</label>
+            </div>
+            <!-- <div class="file-field input-field col s12">
+              <div class="btn">
+                <span>Photo</span>
+                <input ng-model="photo" ng-trim="true" type="file">
+              </div>
+              <div class="file-path-wrapper">
+                <input class="file-path validate" type="text">
+              </div>
+            </div> -->
+          </div>
+          <div class="row">
+            <div class="col s12">
+              <div class="input-field col s3">
+                <input ng-model="sexe" value="true" class="with-gap" name="sexe" type="radio" id="homme" />
+                <label for="homme">Homme</label>
+                <input ng-model="sexe" value="false" class="with-gap" name="sexe" type="radio" id="femme" />
+                <label for="femme">Femme</label>
+              </div>
+              <div class="input-field col s3">
+                <select class="icons" ng-model="ville" id="ville">
+                  <option value="" disabled selected>Ville</option>
+                  <option value="Paris">Paris</option>
+                  <option value="Lyon">Lyon</option>
+                  <option value="Marseille">Marseille</option>
+                </select>
+              </div>
+              <div class="input-field col s3">
+                <select class="icons" ng-model="langue" id="langue">
+                  <option value="" disabled selected>Langue</option>
+                  <option value="fr">Fr</option>
+                  <option value="en">En</option>
+                  <option value="it">It</option>
+                  <option value="es">Es</option>
+                </select>
+              </div>
+              <div class="input-field col s3">
+                <input ng-model="noteBac" ng-trim="true" id="noteBac" type="text" class="validate">
+                <label for="noteBac">Note du Bac</label>
+              </div>
+            </div>
+          </div>
+          <!-- début champ "Biographie" -->
+          <div class="row">
+            <div class="input-field col s12">
+              <i class="material-icons prefix">mode_edit</i>
+              <textarea ng-model="biographie" ng-trim="true" id="biographie" class="materialize-textarea"></textarea>
+              <label for="biographie">Biographie</label>
+            </div>
+          </div>
+          <!-- fin champ "Biographie" -->
+
+          <!-- bouron création formulaire-->
+          <div class="row">
+            <div class="col s12">
+              <button onclick="Materialize.toast('Utilisateur créé', 3000, 'rounded')" class="btn waves-effect waves-light" type="submit" name="action">Utilisateur<i class="material-icons right">add</i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- fin formulaire d'ajout d'utilisateurs -->
+    </div>
+
+
+    <!-- librairie Angular -->
+    <script src="bower_components/angular/angular.min.js" charset="utf-8"></script>
+    <!-- librairie Moment -->
+    <script src="bower_components/moment/min/moment-with-locales.min.js" charset="utf-8"></script>
+    <!-- librairie Underscore -->
+    <script src="bower_components/underscore/underscore-min.js" charset="utf-8"></script>
+    <!-- librairie Jquery -->
+    <script src="bower_components/jquery/dist/jquery.min.js" charset="utf-8"></script>
+    <!-- librairie Materialize JS -->
+    <script src="bower_components/materialize/dist/js/materialize.min.js" charset="utf-8"></script>
+    <!-- lien vers Main.js -->
+    <script src="main.js" charset="utf-8"></script>
+  </body>
+</html>
