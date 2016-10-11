@@ -5,4 +5,4 @@ Carnet d'adresses réalisé sous AngularJS (durant ma formation de Développeur/
 
 ![image2](/image2.png)
 
-![image3](/image3.png)
+
